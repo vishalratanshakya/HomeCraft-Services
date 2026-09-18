@@ -83,6 +83,11 @@ const startServer = async () => {
   });
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+} else {
+  // When running as a Serverless Function on Vercel
+  connectDB();
+}
 
 module.exports = app;
