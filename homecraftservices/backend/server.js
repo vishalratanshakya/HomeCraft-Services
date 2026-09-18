@@ -80,6 +80,16 @@ const startServer = async () => {
 
   app.listen(PORT, () => {
     console.log(`HomeCraft Services API listening on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
+    
+    // Self-ping to keep Render free tier active
+    if (process.env.RENDER_EXTERNAL_URL) {
+      setInterval(() => {
+        const url = `${process.env.RENDER_EXTERNAL_URL}/api/health`;
+        fetch(url)
+          .then((res) => console.log(`[Keep-Alive] Ping successful: ${res.status}`))
+          .catch((err) => console.error(`[Keep-Alive] Ping failed: ${err.message}`));
+      }, 14 * 60 * 1000); // 14 minutes
+    }
   });
 };
 
