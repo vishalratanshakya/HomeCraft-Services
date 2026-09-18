@@ -11,6 +11,28 @@ import {
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
+const CATEGORIES_SERVICES_MAP = [
+  {
+    title: 'AC & Appliance Repair',
+    services: [
+      { name: 'AC Service', slug: 'ac-service', description: 'Comprehensive split/window air conditioner service filter wash.', basePrice: 299, rating: 4.8, reviewCount: 2500, imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=500&q=80' },
+      { name: 'AC Repair', slug: 'ac-repair', description: 'Diagnosis of gas leaks, compressor check and cooling repair.', basePrice: 499, rating: 4.8, reviewCount: 342, imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80' },
+    ]
+  },
+  {
+    title: 'Salon for Women',
+    services: [
+      { name: "Women's Haircut", slug: 'womens-haircut', description: 'Style haircut, trim, and blow-dry by top stylists.', basePrice: 299, rating: 4.8, reviewCount: 1800, imageUrl: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=500&q=80' },
+    ]
+  },
+  {
+    title: 'Salon for Men',
+    services: [
+      { name: "Men's Haircut", slug: 'haircut-men', description: 'Classic haircut, trim, and professional hair style finish.', basePrice: 249, rating: 4.8, reviewCount: 434, imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=500&q=80' },
+    ]
+  }
+];
+
 export default function ServiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -44,10 +66,42 @@ export default function ServiceDetailPage() {
         const local = localStorage.getItem('user_wishlist');
         if (local) {
           const list = JSON.parse(local);
-          setIsFav(list.includes(data._id));
+          setIsFav(list.includes(data._id || data.slug));
         }
       } catch (err) {
-        setError('Service not found or failed to retrieve details.');
+        // Fallback check for static/mock service by slug
+        let foundMock: any = null;
+        for (const cat of CATEGORIES_SERVICES_MAP) {
+          const match = cat.services.find((s: any) => s.slug === slug);
+          if (match) {
+            foundMock = {
+              _id: match.slug,
+              slug: match.slug,
+              name: match.name,
+              description: match.description,
+              basePrice: match.basePrice,
+              discountPercentage: 0,
+              estimatedDurationMins: 60,
+              rating: match.rating,
+              reviewCount: match.reviewCount,
+              imageUrl: match.imageUrl,
+              categoryId: { name: cat.title },
+              features: ['Professional & Trained Experts', 'Sanitized Tools & Equipment', '30-Day Guarantee']
+            };
+            break;
+          }
+        }
+
+        if (foundMock) {
+          setService(foundMock);
+          const local = localStorage.getItem('user_wishlist');
+          if (local) {
+            const list = JSON.parse(local);
+            setIsFav(list.includes(foundMock._id));
+          }
+        } else {
+          setError('Service not found or failed to retrieve details.');
+        }
       } finally {
         setLoading(false);
       }

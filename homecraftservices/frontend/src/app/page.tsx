@@ -14,6 +14,7 @@ import {
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 const getFallbackServiceImage = (categoryName: string = '', serviceName: string = ''): string => {
   const cat = categoryName.toLowerCase();
@@ -164,7 +165,8 @@ export function ServiceCard({
   wishlist?: string[];
   onToggleWishlist?: (id: string, name: string) => void;
 }) {
-  const isFav = wishlist.includes(service._id);
+  const targetId = service._id || service.slug || service.id;
+  const isFav = targetId ? wishlist.includes(targetId) : false;
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden border border-gold/20 shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-1 hover:border-gold/45 transition-all duration-300 group h-full">
@@ -186,7 +188,9 @@ export function ServiceCard({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onToggleWishlist(service._id, service.name);
+              if (targetId) {
+                onToggleWishlist(targetId, service.name);
+              }
             }}
             className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm border border-gold/20 flex items-center justify-center shadow hover:bg-white hover:scale-105 active:scale-95 transition-all z-20"
             title={isFav ? "Remove from wishlist" : "Add to wishlist"}
@@ -245,9 +249,9 @@ function DealCard({
   wishlist?: string[];
   onToggleWishlist?: (id: string, name: string) => void;
 }) {
-  // Use serviceId reference if it exists, otherwise fall back to _id
-  const targetId = deal.serviceId?._id || deal.serviceId || deal._id;
-  const isFav = wishlist.includes(targetId);
+  // Use serviceId reference if it exists, otherwise fall back to _id or slug
+  const targetId = deal.serviceId?._id || deal.serviceId || deal._id || deal.slug;
+  const isFav = targetId ? wishlist.includes(targetId) : false;
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden border border-gold/20 shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-1 hover:border-gold/45 transition-all duration-300 group h-full">
@@ -272,7 +276,9 @@ function DealCard({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onToggleWishlist(targetId, deal.name);
+              if (targetId) {
+                onToggleWishlist(targetId, deal.name);
+              }
             }}
             className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm border border-gold/20 flex items-center justify-center shadow hover:bg-white hover:scale-105 active:scale-95 transition-all z-20"
             title={isFav ? "Remove from wishlist" : "Add to wishlist"}
@@ -713,6 +719,224 @@ const CATEGORIES_SERVICES_MAP = [
   }
 ];
 
+// ─── Default 5 Hero Banners for Auto-Scrolling Hero Section ─────────────────
+const DEFAULT_HERO_BANNERS = [
+  {
+    _id: 'banner-1',
+    title: 'Premium Home & Beauty Services',
+    subtitle: 'Expert professionals delivered to your doorstep. Trusted by over 1,000,000+ households.',
+    badgeText: 'Top Rated • 4.8★',
+    ctaText: 'Book a Service',
+    ctaRoute: '/services',
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80',
+    gradient: 'from-black/80 via-black/40 to-transparent',
+  },
+  {
+    _id: 'banner-2',
+    title: 'Instant AC & Appliance Repair',
+    subtitle: 'Certified technicians at your home within 30 minutes with transparent upfront pricing.',
+    badgeText: '20% OFF Summer Offer',
+    promoCode: 'SUMMER20',
+    ctaText: 'Explore AC Repair',
+    ctaRoute: '/services?category=AC%20%26%20Appliance%20Repair',
+    imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=80',
+    gradient: 'from-black/80 via-black/40 to-transparent',
+  },
+  {
+    _id: 'banner-3',
+    title: 'Salon & Spa Luxury Experience',
+    subtitle: 'Professional beauty artists with sanitized single-use kits & organic luxury products.',
+    badgeText: 'Flat ₹150 OFF',
+    promoCode: 'GLOW150',
+    ctaText: 'Book Salon at Home',
+    ctaRoute: '/services?category=Salon%20for%20Women',
+    imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80',
+    gradient: 'from-black/80 via-black/40 to-transparent',
+  },
+  {
+    _id: 'banner-4',
+    title: 'Deep Home & Sofa Cleaning',
+    subtitle: 'Eco-friendly sanitization & high-pressure extraction washing for immaculate homes.',
+    badgeText: 'Best Seller Package',
+    ctaText: 'Book Deep Cleaning',
+    ctaRoute: '/services?category=Cleaning%20%26%20Pest%20Control',
+    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1600&q=80',
+    gradient: 'from-black/80 via-black/40 to-transparent',
+  },
+  {
+    _id: 'banner-5',
+    title: 'Certified Electricians & Plumbers',
+    subtitle: 'Fix wiring, socket faults, and tap leakages quickly with background-verified experts.',
+    badgeText: 'Starting at ₹99',
+    ctaText: 'Book Electrician & Plumbing',
+    ctaRoute: '/services?category=Electrician%20%26%20Plumbing',
+    imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1600&q=80',
+    gradient: 'from-black/80 via-black/40 to-transparent',
+  },
+];
+
+function HeroBannerSlider({ dbBanners = [] }: { dbBanners?: any[] }) {
+  const activeDbBanners = dbBanners.filter((b: any) => b.position !== 'PROMO_CARD' && b.isActive !== false);
+  
+  // Combine DB banners with default banners to guarantee 5 total active banners
+  const banners = activeDbBanners.length >= 5 
+    ? activeDbBanners.slice(0, 5) 
+    : [...activeDbBanners, ...DEFAULT_HERO_BANNERS.slice(activeDbBanners.length)].slice(0, 5);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Auto scroll every 3 seconds (3000ms), 5 -> 1 continuous loop
+  useEffect(() => {
+    if (isHovered || banners.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % banners.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isHovered, banners.length]);
+
+  const goToPrev = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + banners.length) % banners.length);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % banners.length);
+  };
+
+  return (
+    <section 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative w-full h-[500px] sm:h-[550px] lg:h-[600px] overflow-hidden bg-black shadow-xl"
+    >
+      {/* Banner Slides */}
+      {banners.map((banner, index) => {
+        const isActive = index === currentIndex;
+        return (
+          <div
+            key={banner._id || index}
+            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+            }`}
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0 w-full h-full">
+              <img
+                src={banner.imageUrl || DEFAULT_HERO_BANNERS[0].imageUrl}
+                alt={banner.title}
+                className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-10000"
+              />
+              {/* Neutral Dark Gradient Overlay for Text Readability without color tinting */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
+            </div>
+
+            {/* Banner Content Container */}
+            <div className="container relative mx-auto h-full px-4 sm:px-8 lg:px-12 flex items-center z-20">
+              <div className="max-w-2xl text-white space-y-4 sm:space-y-6">
+                {/* Badge & Promo tag */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {banner.badgeText && (
+                    <span className="px-3.5 py-1 bg-[#C3AB84] text-[#0F3D30] font-bold text-xs rounded-full uppercase tracking-wider shadow-md">
+                      {banner.badgeText}
+                    </span>
+                  )}
+                  {banner.promoCode && (
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white border border-white/30 font-mono text-xs font-bold rounded-full">
+                      CODE: {banner.promoCode}
+                    </span>
+                  )}
+                  <span className="text-xs font-semibold text-[#C3AB84]/90 bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+                    Banner {index + 1} of {banners.length}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight drop-shadow-md">
+                  {banner.title}
+                </h1>
+
+                {/* Subtitle */}
+                {banner.subtitle && (
+                  <p className="text-sm sm:text-lg text-cream/90 max-w-xl font-normal leading-relaxed drop-shadow">
+                    {banner.subtitle}
+                  </p>
+                )}
+
+                {/* CTA Buttons & Ratings */}
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                  <Link
+                    href={banner.ctaRoute || '/services'}
+                    className="px-8 py-3.5 sm:py-4 bg-[#C3AB84] hover:bg-[#b09770] text-[#0F3D30] font-bold text-sm sm:text-base rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all text-center flex items-center justify-center gap-2"
+                  >
+                    <span>{banner.ctaText || 'Book a Service'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/partner/login"
+                    className="px-6 py-3.5 sm:py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white font-semibold text-sm sm:text-base rounded-full transition-all text-center"
+                  >
+                    Join as Partner
+                  </Link>
+                </div>
+
+                {/* Trust Highlights */}
+                <div className="pt-4 flex items-center gap-6 text-xs sm:text-sm text-[#C3AB84]/90 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-4 h-4 fill-[#C3AB84] text-[#C3AB84]" />
+                    <span>4.8/5 Avg Rating</span>
+                  </div>
+                  <div className="w-px h-4 bg-white/20" />
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Verified Professionals</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Left / Right Arrow Buttons */}
+      <button
+        type="button"
+        onClick={goToPrev}
+        aria-label="Previous Banner"
+        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      <button
+        type="button"
+        onClick={goToNext}
+        aria-label="Next Banner"
+        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+
+      {/* 5 Dot Pagination Indicators */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+        {banners.map((_, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => setCurrentIndex(idx)}
+            aria-label={`Go to slide ${idx + 1}`}
+            className={`transition-all duration-300 rounded-full ${
+              idx === currentIndex
+                ? 'w-8 h-2.5 bg-[#C3AB84] shadow'
+                : 'w-2.5 h-2.5 bg-white/50 hover:bg-white'
+            }`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [popularServices, setPopularServices] = useState<any[]>([]);
@@ -772,7 +996,17 @@ export default function Home() {
     }
   };
 
+  const router = useRouter();
+
   const toggleWishlist = async (id: string, serviceName: string) => {
+    if (!id) return;
+    const role = typeof window !== 'undefined' ? localStorage.getItem('homecraft_role') : '';
+    if (!user || role !== 'user') {
+      toast.error('Please log in to add items to your wishlist.');
+      router.push('/login');
+      return;
+    }
+
     let updated = [...wishlist];
     const isAdded = !updated.includes(id);
     if (!isAdded) {
@@ -782,12 +1016,6 @@ export default function Home() {
     }
     setWishlist(updated);
     localStorage.setItem('user_wishlist', JSON.stringify(updated));
-
-    const role = typeof window !== 'undefined' ? localStorage.getItem('homecraft_role') : '';
-    if (!user || role !== 'user') {
-      toast.success(isAdded ? `${serviceName} added to wishlist (offline)` : `${serviceName} removed from wishlist (offline)`);
-      return;
-    }
 
     try {
       await api.post('/user/dashboard/wishlist/toggle', { serviceId: id });
@@ -1140,72 +1368,9 @@ export default function Home() {
     <div className="flex-1 w-full bg-cream overflow-x-hidden">
 
       {/* ══════════════════════════════════════════════════════════
-          1.  HERO SECTION  (unchanged)
+          1.  HERO SECTION — 5-Banner Auto-Scrolling Slider (3s interval)
       ══════════════════════════════════════════════════════════ */}
-      <section className="relative pt-10 pb-8 lg:pb-12 min-h-[55vh] flex flex-col justify-center overflow-hidden">
-        <div className="absolute top-1/2 left-0 w-1/2 h-[300px] -translate-y-1/2 pointer-events-none z-0 opacity-80">
-          <svg viewBox="0 0 500 500" preserveAspectRatio="none" className="w-full h-full text-beige fill-current">
-            <path d="M0,100 C150,200 350,0 500,150 L0,500 Z" opacity="0.5" />
-          </svg>
-        </div>
-
-        <div
-          className="absolute inset-y-0 right-0 w-full lg:w-[60%] hidden lg:block z-0"
-          style={{
-            maskImage: 'linear-gradient(to right, transparent 0%, black 40%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 40%)'
-          }}
-        >
-          <Image
-            src="/images/hero-interior.png"
-            alt="Premium modern luxury living room interior"
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 60vw"
-            className="object-cover object-center"
-            priority
-          />
-        </div>
-
-        <div className="container relative mx-auto px-4 sm:px-8 lg:px-12 flex flex-col lg:flex-row items-center gap-8 lg:gap-16 z-10">
-          <div className="flex-1 text-center lg:text-left max-w-2xl w-full">
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-[4.5rem] font-bold tracking-tight text-primary leading-[1.1]">
-              Premium services, <br />
-              <span className="relative inline-block mt-2">
-                delivered to you.
-                <svg className="absolute -bottom-4 left-0 w-full h-3 text-gold" viewBox="0 0 300 12" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                  <path d="M2 9.5C50.5 4.5 140 1 298 7" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                </svg>
-              </span>
-            </h1>
-
-            <p className="mt-8 sm:mt-12 text-base sm:text-lg text-foreground max-w-xl mx-auto lg:mx-0">
-              Expert professionals for every home and beauty need. Trusted by millions, designed for quality.
-            </p>
-
-            <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
-              <Link href="/services" className="rounded-full bg-primary px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-medium text-white hover:bg-primary/90 transition-all w-full sm:w-auto text-center">
-                Book a Service
-              </Link>
-              <Link href="/partner/login" className="rounded-full bg-cream border border-gold px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-medium text-foreground hover:bg-beige transition-all w-full sm:w-auto text-center">
-                Join as Partner
-              </Link>
-            </div>
-
-            <div className="mt-10 flex items-center justify-center lg:justify-start gap-6 text-sm font-medium text-primary/80">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 fill-gold text-gold" />
-                <span>4.8/5 Avg Rating</span>
-              </div>
-              <div className="w-px h-4 bg-primary/20"></div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-primary" />
-                <span>Verified Pros</span>
-              </div>
-            </div>
-          </div>
-          <div className="hidden lg:block flex-1 w-full"></div>
-        </div>
-      </section>
+      <HeroBannerSlider dbBanners={dbBanners} />
 
       {/* ══════════════════════════════════════════════════════════
           2.  CATEGORIES SECTION  (unchanged)

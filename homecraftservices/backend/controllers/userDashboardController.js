@@ -351,13 +351,35 @@ exports.toggleWishlist = asyncHandler(async (req, res) => {
 
   if (!user.wishlist) user.wishlist = [];
 
-  const index = user.wishlist.indexOf(serviceId);
+  const serviceIdStr = String(serviceId);
+  const index = user.wishlist.findIndex(id => String(id) === serviceIdStr);
   let added = false;
   if (index > -1) {
     user.wishlist.splice(index, 1);
   } else {
-    user.wishlist.push(serviceId);
-    added = true;
+    // Check if valid ObjectId if adding dynamic ID
+    const mongoose = require('mongoose');
+    if (mongoose.Types.ObjectId.isValid(serviceIdStr)) {
+      user.wishlist.push(serviceIdStr);
+      added = true;
+    } else {
+      // If it's a slug or static ID, store as is or attempt lookup by slug
+      const Service = require('../models/Service');
+      const foundSvc = await Service.findOne({ slug: serviceIdStr });
+      if (foundSvc) {
+        const foundIdStr = foundSvc._id.toString();
+        const foundIdx = user.wishlist.findIndex(id => String(id) === foundIdStr);
+        if (foundIdx > -1) {
+          user.wishlist.splice(foundIdx, 1);
+        } else {
+          user.wishlist.push(foundSvc._id);
+          added = true;
+        }
+      } else {
+        user.wishlist.push(serviceIdStr);
+        added = true;
+      }
+    }
   }
 
   await user.save();

@@ -154,24 +154,12 @@ const listBanners = asyncHandler(async (req, res) => {
 
 const addBanner = asyncHandler(async (req, res) => {
   const banner = await Banner.create(req.body);
-  if (banner.isActive) {
-    await Banner.updateMany(
-      { position: banner.position || 'CAROUSEL', _id: { $ne: banner._id } },
-      { $set: { isActive: false } }
-    );
-  }
   res.status(201).json({ success: true, banner });
 });
 
 const updateBanner = asyncHandler(async (req, res) => {
   const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
-  if (banner.isActive) {
-    await Banner.updateMany(
-      { position: banner.position || 'CAROUSEL', _id: { $ne: banner._id } },
-      { $set: { isActive: false } }
-    );
-  }
   res.json({ success: true, banner });
 });
 

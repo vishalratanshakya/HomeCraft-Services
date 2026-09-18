@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useLocation } from '@/lib/location';
+import { useAuth } from '@/lib/auth';
 import toast from 'react-hot-toast';
 
 const getFallbackServiceImage = (categoryName: string = '', serviceName: string = ''): string => {
@@ -180,7 +181,17 @@ function ServicesList() {
     applyFilters(allServices, nextCat, searchInput, sortBy, priceRange, minRating, availability);
   };
 
+  const { user } = useAuth();
+
   const toggleWishlist = async (id: string, serviceName: string = 'Service') => {
+    if (!id) return;
+    const role = typeof window !== 'undefined' ? localStorage.getItem('homecraft_role') : '';
+    if (!user || role !== 'user') {
+      toast.error('Please log in to add items to your wishlist.');
+      router.push('/login');
+      return;
+    }
+
     let updated = [...wishlist];
     const isAdded = !updated.includes(id);
     if (!isAdded) {
@@ -190,11 +201,6 @@ function ServicesList() {
     }
     setWishlist(updated);
     localStorage.setItem('user_wishlist', JSON.stringify(updated));
-    const role = typeof window !== 'undefined' ? localStorage.getItem('homecraft_role') : '';
-    if (role !== 'user') {
-      toast.success(isAdded ? `${serviceName} added to wishlist (offline)` : `${serviceName} removed from wishlist (offline)`);
-      return;
-    }
 
     try {
       await api.post('/user/dashboard/wishlist/toggle', { serviceId: id });
@@ -502,15 +508,16 @@ function ServicesList() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                 {services.map((service: any) => {
-                  const isFav = wishlist.includes(service._id);
+                  const targetId = service._id || service.slug || service.id;
+                  const isFav = targetId ? wishlist.includes(targetId) : false;
                   const isDiscounted = service.discountPercentage > 0;
                   const finalPrice = isDiscounted ? Math.round(service.basePrice * (1 - service.discountPercentage / 100)) : service.basePrice;
 
                   return (
-                    <div key={service._id} className="bg-white border border-[#C3AB84]/20 rounded-3xl p-2.5 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative">
+                    <div key={service._id || service.slug} className="bg-white border border-[#C3AB84]/20 rounded-3xl p-2.5 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative">
                       
                       {/* Wishlist toggle button */}
-                      <button onClick={() => toggleWishlist(service._id, service.name)} className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 border border-gray-100 flex items-center justify-center shadow-sm">
+                      <button onClick={() => targetId && toggleWishlist(targetId, service.name)} className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 border border-gray-100 flex items-center justify-center shadow-sm">
                         <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-foreground/40'}`} />
                       </button>
 

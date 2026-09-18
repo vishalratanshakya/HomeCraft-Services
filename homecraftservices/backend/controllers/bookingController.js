@@ -40,26 +40,70 @@ exports.createOrder = async (req, res) => {
     if (packageId) {
       // ── Package Booking ──
       const Package = require('../models/Package');
-      const pkg = await Package.findById(packageId);
-      if (!pkg || !pkg.isActive) return res.status(404).json({ message: 'Package not found or inactive.' });
-      basePrice = pkg.basePrice * qty;
-      if (pkg.discountPercentage > 0) {
-        basePrice = Math.round((pkg.basePrice * (1 - pkg.discountPercentage / 100)) * qty);
+      const mongoose = require('mongoose');
+      let pkg = null;
+      if (mongoose.Types.ObjectId.isValid(packageId)) {
+        pkg = await Package.findById(packageId);
+      } else {
+        pkg = await Package.findOne({ slug: packageId });
       }
-      commissionAmount = Math.round(basePrice * 0.10); // default 10% commission for packages
-      isPackageBooking = true;
-      bookingPackageId = pkg._id;
+
+      if (pkg && pkg.isActive) {
+        basePrice = pkg.basePrice * qty;
+        if (pkg.discountPercentage > 0) {
+          basePrice = Math.round((pkg.basePrice * (1 - pkg.discountPercentage / 100)) * qty);
+        }
+        commissionAmount = Math.round(basePrice * 0.10);
+        isPackageBooking = true;
+        bookingPackageId = pkg._id;
+      } else {
+        // Fallback for mock package slug (e.g. 'basic-home-care')
+        const MOCK_PACKAGES = {
+          'basic-home-care': { name: 'Basic Home Care', price: 699 },
+          'deep-home-care': { name: 'Deep Home Care', price: 1299 },
+          'move-in-care': { name: 'Move-In Care', price: 1999 },
+          'annual-home-care': { name: 'Annual Home Care', price: 2999 }
+        };
+        const mock = MOCK_PACKAGES[packageId];
+        if (!mock) return res.status(404).json({ message: 'Package not found or inactive.' });
+        basePrice = mock.price * qty;
+        commissionAmount = Math.round(basePrice * 0.10);
+        isPackageBooking = true;
+      }
     } else {
       // ── Single Service Booking ──
-      const service = await Service.findById(serviceId).populate('categoryId');
-      if (!service) return res.status(404).json({ message: 'Service not found' });
-      basePrice = service.basePrice * qty;
-      if (service.discountPercentage > 0) {
-        basePrice = Math.round((service.basePrice * (1 - service.discountPercentage / 100)) * qty);
+      const mongoose = require('mongoose');
+      let service = null;
+      if (mongoose.Types.ObjectId.isValid(serviceId)) {
+        service = await Service.findById(serviceId).populate('categoryId');
+      } else {
+        service = await Service.findOne({ slug: serviceId }).populate('categoryId');
       }
-      const platformFeePercentage = service.categoryId?.platformFeePercentage || 10;
-      commissionAmount = Math.round(basePrice * platformFeePercentage / 100);
-      bookingServiceId = service._id;
+
+      if (service) {
+        basePrice = service.basePrice * qty;
+        if (service.discountPercentage > 0) {
+          basePrice = Math.round((service.basePrice * (1 - service.discountPercentage / 100)) * qty);
+        }
+        const platformFeePercentage = service.categoryId?.platformFeePercentage || 10;
+        commissionAmount = Math.round(basePrice * platformFeePercentage / 100);
+        bookingServiceId = service._id;
+      } else {
+        // Fallback for static demo service slugs (e.g. 'ac-service')
+        const MOCK_SERVICES = {
+          'ac-service': { name: 'AC Service', price: 299 },
+          'ac-repair': { name: 'AC Repair', price: 499 },
+          'ac-installation': { name: 'AC Installation', price: 799 },
+          'womens-haircut': { name: "Women's Haircut", price: 299 },
+          'haircut-men': { name: "Men's Haircut", price: 249 },
+          'bathroom-cleaning': { name: 'Bathroom Cleaning', price: 399 },
+          'deep-home-cleaning': { name: 'Full Home Cleaning', price: 799 }
+        };
+        const mock = MOCK_SERVICES[serviceId];
+        if (!mock) return res.status(404).json({ message: 'Service not found or inactive.' });
+        basePrice = mock.price * qty;
+        commissionAmount = Math.round(basePrice * 0.10);
+      }
     }
 
     // ── Coupon Validation (backend-enforced) ──
@@ -209,14 +253,16 @@ exports.createOrder = async (req, res) => {
     await booking.save();
 
     // ── Notify user that their booking was created ──
-    createNotification(
-      customerId,
-      'user',
-      'Booking Initiated',
-      `Your booking has been placed successfully. Awaiting payment confirmation.`,
-      'booking',
-      { bookingId: booking._id }
-    );
+    try {
+      createNotification(
+        customerId,
+        'user',
+        'Booking Initiated',
+        `Your booking has been placed successfully. Awaiting payment confirmation.`,
+        'booking',
+        { bookingId: booking._id }
+      );
+    } catch (_) {}
 
     // ── Notify all admins ──
     try {
@@ -239,8 +285,8 @@ exports.createOrder = async (req, res) => {
       discountAmount,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating order' });
+    console.error("Order creation error:", error);
+    res.status(500).json({ message: error.message || 'Error creating order' });
   }
 };
 
@@ -265,7 +311,7 @@ exports.verifyPayment = async (req, res) => {
           paymentId = successfulPayment.cf_payment_id.toString();
         }
       } catch (cfErr) {
-        // Fallback fallback
+        // Fallback
       }
     }
 
@@ -285,12 +331,14 @@ exports.verifyPayment = async (req, res) => {
 
       // ── Notify user: payment confirmed ──
       if (updatedBooking?.customerId) {
-        createNotification(
-          updatedBooking.customerId, 'user',
-          'Payment Confirmed 🎉',
-          'Your payment was successful! We are finding the best service partner for you.',
-          'payment', { bookingId: updatedBooking._id }
-        );
+        try {
+          createNotification(
+            updatedBooking.customerId, 'user',
+            'Payment Confirmed 🎉',
+            'Your payment was successful! We are finding the best service partner for you.',
+            'payment', { bookingId: updatedBooking._id }
+          );
+        } catch (_) {}
       }
 
       // ── Notify admins: booking is now REQUESTED ──
@@ -309,8 +357,8 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Payment not successful!" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error verifying payment' });
+    console.error("Payment verification error:", error);
+    res.status(500).json({ message: error.message || 'Error verifying payment' });
   }
 };
 

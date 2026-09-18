@@ -138,8 +138,15 @@ function SignupPageContent() {
       </div>
 
       {/* Right Column Form */}
-      <div className="flex items-center justify-center p-6 sm:p-12 lg:p-16">
-        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-10 border border-gold/20 shadow-xl shadow-primary/5">
+      <div className="flex flex-col items-center justify-center px-4 py-8 sm:px-8 sm:py-12 lg:p-16 w-full">
+        {/* Mobile Header Branding */}
+        <div className="lg:hidden text-center mb-6">
+          <Link href="/" className="inline-block">
+            <span className="font-serif text-2xl font-bold text-primary tracking-tight">HomeCraft Services</span>
+          </Link>
+        </div>
+
+        <div className="w-full max-w-md bg-white rounded-3xl p-5 sm:p-8 md:p-10 border border-gold/20 shadow-xl shadow-primary/5">
           <div className="text-center mb-6">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary">Create HomeCraft Services Account</h1>
             <p className="mt-1.5 text-xs sm:text-sm text-foreground/50">Start booking premium home services today</p>
@@ -149,11 +156,11 @@ function SignupPageContent() {
             <div>
               <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider">Full Name *</label>
               <div className="relative">
-                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                <UserIcon className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                 <input
                   type="text" value={name} onChange={e => setName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full pl-11 pr-4 py-2.5 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  className="w-full pl-10 sm:pl-11 pr-4 py-3 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   required
                 />
               </div>
@@ -162,11 +169,11 @@ function SignupPageContent() {
             <div>
               <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider">Email Address *</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                <Mail className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="w-full pl-11 pr-4 py-2.5 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  className="w-full pl-10 sm:pl-11 pr-4 py-3 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   required
                 />
               </div>
@@ -175,30 +182,31 @@ function SignupPageContent() {
             <div>
               <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider">Mobile Number *</label>
               <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                <Phone className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                 <input
                   type="tel" maxLength={10} value={phone}
                   onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
                   placeholder="Enter your mobile number"
-                  className="w-full pl-11 pr-4 py-2.5 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-mono"
+                  className="w-full pl-10 sm:pl-11 pr-4 py-3 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-mono"
                   required
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider font-sans">Password *</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                  <Lock className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                   <input
                     type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                     placeholder="••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary font-mono"
+                    className="w-full pl-10 pr-9 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-mono"
                     required
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
+                    aria-label="Toggle password visibility"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary p-1">
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -207,15 +215,16 @@ function SignupPageContent() {
               <div>
                 <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider font-sans">Confirm Password *</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                  <Lock className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                     placeholder="••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary font-mono"
+                    className="w-full pl-10 pr-9 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-mono"
                     required
                   />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
+                    aria-label="Toggle confirm password visibility"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary p-1">
                     {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -225,7 +234,7 @@ function SignupPageContent() {
             <div className="flex items-start gap-2.5 pt-1.5">
               <input
                 id="terms" type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
-                className="h-4.5 w-4.5 rounded border-gold/30 text-primary focus:ring-primary/20 accent-primary mt-0.5 cursor-pointer"
+                className="h-4.5 w-4.5 rounded border-gold/30 text-primary focus:ring-primary/20 accent-primary mt-0.5 cursor-pointer flex-shrink-0"
               />
               <label htmlFor="terms" className="text-xs text-foreground/60 leading-normal cursor-pointer select-none">
                 I accept and agree to HomeCraft Services's{' '}
@@ -238,7 +247,7 @@ function SignupPageContent() {
             {error && <p className="text-red-500 text-xs font-semibold bg-red-50 rounded-xl p-3 border border-red-100">{error}</p>}
 
             <button type="submit" disabled={isLoading}
-              className="w-full py-3.5 bg-primary text-white rounded-full font-bold hover:bg-primary/95 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
+              className="w-full h-11 sm:h-12 py-3 bg-primary text-white rounded-full font-bold hover:bg-primary/95 transition-all text-sm shadow-sm flex items-center justify-center gap-2 active:scale-[0.98]">
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Account'}
             </button>
           </form>
@@ -250,7 +259,7 @@ function SignupPageContent() {
             <div className="flex-grow border-t border-gold/15"></div>
           </div>
 
-          <div className="flex justify-center w-full">
+          <div className="flex justify-center w-full max-w-full overflow-hidden">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError('Google signup failed')}
@@ -259,7 +268,7 @@ function SignupPageContent() {
             />
           </div>
 
-          <div className="mt-8 text-center text-xs text-foreground/60">
+          <div className="mt-6 sm:mt-8 text-center text-xs text-foreground/60">
             Already have an account?{' '}
             <Link href="/login" className="font-bold text-primary hover:underline">Login</Link>
           </div>

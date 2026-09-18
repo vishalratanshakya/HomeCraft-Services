@@ -177,8 +177,15 @@ function LoginPageContent() {
       </div>
 
       {/* Right Column Form */}
-      <div className="flex items-center justify-center p-6 sm:p-12 lg:p-16">
-        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-10 border border-gold/20 shadow-xl shadow-primary/5">
+      <div className="flex flex-col items-center justify-center px-4 py-8 sm:px-8 sm:py-12 lg:p-16 w-full">
+        {/* Mobile Header Branding */}
+        <div className="lg:hidden text-center mb-6">
+          <Link href="/" className="inline-block">
+            <span className="font-serif text-2xl font-bold text-primary tracking-tight">HomeCraft Services</span>
+          </Link>
+        </div>
+
+        <div className="w-full max-w-md bg-white rounded-3xl p-5 sm:p-8 md:p-10 border border-gold/20 shadow-xl shadow-primary/5">
           <div className="text-center mb-6">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary">Login to HomeCraft Services</h1>
             <p className="mt-1.5 text-xs sm:text-sm text-foreground/50">Grow your experience with expert services</p>
@@ -193,13 +200,13 @@ function LoginPageContent() {
           {/* Password login form */}
           <form onSubmit={handlePasswordLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider">Enter your email</label>
+              <label className="block text-xs font-bold text-foreground/75 mb-1.5 uppercase tracking-wider">Email or Mobile Number</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                <Mail className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                 <input
                   type="text" value={identifier} onChange={e => setIdentifier(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="Enter your email or phone"
+                  className="w-full pl-10 sm:pl-11 pr-4 py-3 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   required
                 />
               </div>
@@ -211,15 +218,16 @@ function LoginPageContent() {
                 <Link href="/contact" className="text-xs font-semibold text-primary hover:underline">Forgot Password?</Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                <Lock className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
                 <input
                   type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-11 py-3 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-mono"
+                  className="w-full pl-10 sm:pl-11 pr-10 sm:pr-11 py-3 h-11 sm:h-12 rounded-2xl border border-gold/30 bg-cream text-foreground text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-mono"
                   required
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary transition-colors">
+                  aria-label="Toggle password visibility"
+                  className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary transition-colors p-1">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -228,7 +236,7 @@ function LoginPageContent() {
             {error && <p className="text-red-500 text-xs font-semibold bg-red-50 rounded-xl p-3 border border-red-100">{error}</p>}
 
             <button type="submit" disabled={isLoading}
-              className="w-full py-3.5 bg-primary text-white rounded-full font-bold hover:bg-primary/95 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
+              className="w-full h-11 sm:h-12 py-3 bg-primary text-white rounded-full font-bold hover:bg-primary/95 transition-all text-sm shadow-sm flex items-center justify-center gap-2 active:scale-[0.98]">
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Log In'}
             </button>
           </form>
@@ -240,7 +248,7 @@ function LoginPageContent() {
             <div className="flex-grow border-t border-gold/15"></div>
           </div>
 
-          <div className="flex justify-center w-full">
+          <div className="flex justify-center w-full max-w-full overflow-hidden">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError('Google auth initiation failed')}
@@ -249,7 +257,7 @@ function LoginPageContent() {
             />
           </div>
 
-          <div className="mt-8 text-center text-xs text-foreground/60">
+          <div className="mt-6 sm:mt-8 text-center text-xs text-foreground/60">
             Don't have an account?{' '}
             <Link href="/signup" className="font-bold text-primary hover:underline">Sign Up</Link>
           </div>
