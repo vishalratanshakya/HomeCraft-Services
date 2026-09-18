@@ -88,7 +88,7 @@ const startServer = async () => {
         fetch(url)
           .then((res) => console.log(`[Keep-Alive] Ping successful: ${res.status}`))
           .catch((err) => console.error(`[Keep-Alive] Ping failed: ${err.message}`));
-      }, 5000); // 5 seconds
+      }, 14 * 60 * 1000); // 14 minutes
     }
   });
 };
